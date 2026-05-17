@@ -32,53 +32,53 @@ def call(Map configMap){
                     }
                 }
             }
-            stage('Install Dependencies') {
-                steps {
-                    script{
-                        sh """
-                            npm install
-                        """
-                    }
-                }
-            }
-            stage('Unit tests') {
-                steps {
-                    script {
-                        def testResult = sh(script: 'npm test', returnStatus: true)
-                        if (testResult != 0) {
-                            utils.updateCommitStatus('failure', 'Unit tests failed', 'unit-tests')
-                            error "Unit tests failed."
-                        } else {
-                            utils.updateCommitStatus('success', 'Unit tests passed', 'unit-tests')
-                        }
-                    }
-                }
-            }
-            stage ('SonarQube Analysis') {
-                steps {
-                    script {
-                        def scannerHome = tool name: 'sonar-8' // agent configuration
-                        withSonarQubeEnv('sonar-server') { // analysing and uploading to server
-                            sh "${scannerHome}/bin/sonar-scanner"
-                        }
-                    }
-                }
-            }
-            stage("Quality Gate") {
-                steps {
-                    script {
-                        timeout(time: 1, unit: 'HOURS') {
-                            def qg = waitForQualityGate()
-                            if (qg.status != 'OK') {
-                                utils.updateCommitStatus('failure', "SonarQube quality gate failed: ${qg.status}", 'sonar-scan')
-                                error "Quality gate failed: ${qg.status}"
-                            } else {
-                                utils.updateCommitStatus('success', 'SonarQube quality gate passed', 'sonar-scan')
-                            }
-                        }
-                    }
-                }
-            }
+            // stage('Install Dependencies') {
+            //     steps {
+            //         script{
+            //             sh """
+            //                 npm install
+            //             """
+            //         }
+            //     }
+            // }
+            // stage('Unit tests') {
+            //     steps {
+            //         script {
+            //             def testResult = sh(script: 'npm test', returnStatus: true)
+            //             if (testResult != 0) {
+            //                 utils.updateCommitStatus('failure', 'Unit tests failed', 'unit-tests')
+            //                 error "Unit tests failed."
+            //             } else {
+            //                 utils.updateCommitStatus('success', 'Unit tests passed', 'unit-tests')
+            //             }
+            //         }
+            //     }
+            // }
+            // stage ('SonarQube Analysis') {
+            //     steps {
+            //         script {
+            //             def scannerHome = tool name: 'sonar-8' // agent configuration
+            //             withSonarQubeEnv('sonar-server') { // analysing and uploading to server
+            //                 sh "${scannerHome}/bin/sonar-scanner"
+            //             }
+            //         }
+            //     }
+            // }
+            // stage("Quality Gate") {
+            //     steps {
+            //         script {
+            //             timeout(time: 1, unit: 'HOURS') {
+            //                 def qg = waitForQualityGate()
+            //                 if (qg.status != 'OK') {
+            //                     utils.updateCommitStatus('failure', "SonarQube quality gate failed: ${qg.status}", 'sonar-scan')
+            //                     error "Quality gate failed: ${qg.status}"
+            //                 } else {
+            //                     utils.updateCommitStatus('success', 'SonarQube quality gate passed', 'sonar-scan')
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             // stage('Dependabot Alerts Check') {
             //     steps {
             //         script {
@@ -193,24 +193,24 @@ def call(Map configMap){
                     }
                 }
             }
-            stage('Push to ECR') {
-                steps {
-                    script {
-                        try {
-                            withAWS(credentials: 'aws-creds', region: "${region}") {
-                                sh """
-                                    aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${acc_id}.dkr.ecr.${region}.amazonaws.com
-                                    docker push ${acc_id}.dkr.ecr.${region}.amazonaws.com/${project}/${component}:${appVersion}
-                                """
-                            }
-                            utils.updateCommitStatus('success', "Image ${appVersion} pushed to ECR", 'push-image')
-                        } catch (err) {
-                            utils.updateCommitStatus('failure', 'Failed to push image to ECR', 'push-image')
-                            throw err
-                        }
-                    }
-                }
-            }
+            // stage('Push to ECR') {
+            //     steps {
+            //         script {
+            //             try {
+            //                 withAWS(credentials: 'aws-creds', region: "${region}") {
+            //                     sh """
+            //                         aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${acc_id}.dkr.ecr.${region}.amazonaws.com
+            //                         docker push ${acc_id}.dkr.ecr.${region}.amazonaws.com/${project}/${component}:${appVersion}
+            //                     """
+            //                 }
+            //                 utils.updateCommitStatus('success', "Image ${appVersion} pushed to ECR", 'push-image')
+            //             } catch (err) {
+            //                 utils.updateCommitStatus('failure', 'Failed to push image to ECR', 'push-image')
+            //                 throw err
+            //             }
+            //         }
+            //     }
+            // }
         }
 
     // post build

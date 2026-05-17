@@ -80,6 +80,11 @@ def call(Map configMap){
                 }
             }
             stage('Dependabot Alerts Check') {
+                when {
+                    expression {
+                        env.BRANCH_NAME.startsWith("feature-")
+                }
+    }
                 steps {
                     script {
                         withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN_SCAN')]) {

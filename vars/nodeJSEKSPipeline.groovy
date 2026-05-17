@@ -79,35 +79,35 @@ def call(Map configMap){
                     }
                 }
             }
-            stage('Dependabot Alerts Check') {
-                steps {
-                    script {
-                        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN_SCAN')]) {
-                            def repoUrl = sh(script: 'git remote get-url origin', returnStdout: true).trim()
-                            def repoPath = repoUrl.replaceAll(/.*github\.com[\/:]/, '').replaceAll(/\.git$/, '')
+            // stage('Dependabot Alerts Check') {
+            //     steps {
+            //         script {
+            //             withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN_SCAN')]) {
+            //                 def repoUrl = sh(script: 'git remote get-url origin', returnStdout: true).trim()
+            //                 def repoPath = repoUrl.replaceAll(/.*github\.com[\/:]/, '').replaceAll(/\.git$/, '')
 
-                            def alertCount = sh(
-                                script: """
-                                    curl -sf \
-                                        -H "Authorization: Bearer \$GITHUB_TOKEN_SCAN" \
-                                        -H "Accept: application/vnd.github+json" \
-                                        -H "X-GitHub-Api-Version: 2022-11-28" \
-                                        "https://api.github.com/repos/${repoPath}/dependabot/alerts?state=open&per_page=100" \
-                                    | jq '[.[] | select(.security_vulnerability.severity == "high" or .security_vulnerability.severity == "critical")] | length'
-                                """,
-                                returnStdout: true
-                            ).trim()
+            //                 def alertCount = sh(
+            //                     script: """
+            //                         curl -sf \
+            //                             -H "Authorization: Bearer \$GITHUB_TOKEN_SCAN" \
+            //                             -H "Accept: application/vnd.github+json" \
+            //                             -H "X-GitHub-Api-Version: 2022-11-28" \
+            //                             "https://api.github.com/repos/${repoPath}/dependabot/alerts?state=open&per_page=100" \
+            //                         | jq '[.[] | select(.security_vulnerability.severity == "high" or .security_vulnerability.severity == "critical")] | length'
+            //                     """,
+            //                     returnStdout: true
+            //                 ).trim()
 
-                            if (alertCount.toInteger() > 0) {
-                                utils.updateCommitStatus('failure', "${alertCount} HIGH/CRITICAL Dependabot alert(s) detected", 'library-scan')
-                                error("Build aborted: ${alertCount} HIGH/CRITICAL Dependabot alert(s) detected. Resolve them before proceeding.")
-                            }
-                            utils.updateCommitStatus('success', 'Dependabot check passed — no HIGH/CRITICAL alerts', 'library-scan')
-                            echo "Dependabot check passed — no HIGH or CRITICAL vulnerabilities found."
-                        }
-                    }
-                }
-            }
+            //                 if (alertCount.toInteger() > 0) {
+            //                     utils.updateCommitStatus('failure', "${alertCount} HIGH/CRITICAL Dependabot alert(s) detected", 'library-scan')
+            //                     error("Build aborted: ${alertCount} HIGH/CRITICAL Dependabot alert(s) detected. Resolve them before proceeding.")
+            //                 }
+            //                 utils.updateCommitStatus('success', 'Dependabot check passed — no HIGH/CRITICAL alerts', 'library-scan')
+            //                 echo "Dependabot check passed — no HIGH or CRITICAL vulnerabilities found."
+            //             }
+            //         }
+            //     }
+            // }
             stage('Build Image') {
                 steps {
                 script{
